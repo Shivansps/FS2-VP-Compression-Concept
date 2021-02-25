@@ -1,0 +1,5 @@
+﻿  VPCompressionTest.cpp
+C:\Users\shiva\source\repos\VPCompressionTest\VPCompressionTest\VPCompressionTest.cpp(99,23): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\source\repos\VPCompressionTest\VPCompressionTest\VPCompressionTest.cpp(155,23): warning C4018: '<': no coinciden signed/unsigned
+  LINK : no se encontró C:\Users\shiva\source\repos\VPCompressionTest\x64\Debug\VPCompressionTest.exe o no lo generó el último vínculo incremental; ejecutando vínculo completo
+  VPCompressionTest.vcxproj -> C:\Users\shiva\source\repos\VPCompressionTest\x64\Debug\VPCompressionTest.exe
