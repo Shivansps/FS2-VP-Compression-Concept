@@ -1,4 +1,5 @@
 #include <iostream>
+#include <lz4hc.h>
 #include <lz4.h>
 #include "vp.h"
 #include <string>
@@ -18,6 +19,7 @@ int main()
     std::cout << "\nFinished, press enter to close";
     getchar();
     
+
     /*
     //Compress Single File
     char* bytes_in, * bytes_out;
@@ -28,14 +30,16 @@ int main()
     {
         fseek(file_in, 0, SEEK_END);
         size = ftell(file_in);
-        std::cout << size ;
+        std::cout << "Original Size: " << size << "\n" ;
         fseek(file_in, 0, SEEK_SET);
         bytes_in = (char*)malloc(size);
         fread(bytes_in, sizeof(char), size, file_in);
         fclose(file_in);
-        bytes_out = (char*)malloc(size*2);
-        int final_size = LZ4_compress_default(bytes_in, bytes_out, size, size * 2);
-        std::cout << final_size;
+        unsigned int max_memory = LZ4_COMPRESSBOUND(size);
+        std::cout << "Memory used: " << max_memory << "\n";
+        bytes_out = (char*)malloc(max_memory);
+        int final_size = LZ4_compress_default(bytes_in, bytes_out, size, max_memory);
+        std::cout << "Compressed Size: " << final_size << "\n";
         fwrite(&size, sizeof(int), 1, file_out); //Saving the original file size in the first 4 bytes, it is needed to decompress
         fwrite(bytes_out, sizeof(char), final_size, file_out);
         fclose(file_out);
@@ -104,16 +108,19 @@ void compress_vp(FILE* vp_in, FILE* vp_out)
             ubyte* file;
             file = load_vp_file(vp_in, index[x]);
             ubyte* compressed_bytes;
-
-            compressed_bytes = (ubyte*)malloc(index[x].filesize * 2);
+            unsigned int max_memory = LZ4_COMPRESSBOUND(index[x].filesize);
+            int compression_level_hc = 9;
+            compressed_bytes = (ubyte*)malloc(max_memory);
 
             memcpy(compressed_bytes, &index[x].filesize, sizeof(int));
 
-            int newsize = LZ4_compress_default(file, compressed_bytes + sizeof(int), index[x].filesize, index[x].filesize * 2);
+            int newsize = LZ4_compress_default(file, compressed_bytes + sizeof(int), index[x].filesize, max_memory); // Normal LZ4, fast compression, fast decompression, somewhat poor compression ratio in some cases.
+            //int newsize = LZ4_compress_HC(file, compressed_bytes + sizeof(int), index[x].filesize, max_memory, compression_level_hc); // High-Compression, very slow compression speed, but still fast decompression.
 
             write_vp_file(vp_out, compressed_bytes, index[x].name, newsize + sizeof(int), getUnixTime(), index_out, &wvp_num_files, &wvp_index_offset);
 
             free(file);
+            free(compressed_bytes);
 
             count++;
         }
@@ -171,6 +178,7 @@ void decompress_vp(FILE* vp_in, FILE* vp_out)
             write_vp_file(vp_out, uncompressed_bytes, index[x].name, original_size, getUnixTime(), index_out, &wvp_num_files, &wvp_index_offset);
 
             free(file);
+            free(uncompressed_bytes);
 
             count++;
         }
