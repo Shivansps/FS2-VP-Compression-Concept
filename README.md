@@ -4,10 +4,20 @@ Using LZ4 lib, nothing too fancy, this code shows how to create compressed vp fi
 A VP decompression method is also provided, as well as two prebuild bins, a compressor, and a decompressor, these bins will compress/decompress all vp files
 that are in the same folder.
 
-Compressed VPs are marked as being "Version 3" in header. 
-It is needed to add the original file size to the start of the compressed data as the decompression method needs that data.
+Compression is slow, but decompression is very fast.
 
-Compression is slow, but decompression is very fast. With some files (like the anis or audio files) the result is actually worse.
+The file format is:
+
+4 byte Header + uncompressed_filesize (int) + compressed file data
+
+CLZ41230000333DATA
+
+So the first 4 bytes of the file must be readed, if the header match, (im using "CLZ4") as header for LZ4 compressed files, then the other 4 bytes of data must be read,
+thats the original filesize data, and finally the rest, what is passed on to the decompression function.
+
+This allows to have both compressed and uncompressed files whiout having to do any changes to the vp structure, right now, and allows to exclude son files from being compressed,
+like very small files or some file that should not be compressed at all, like movies, audios and cbanis.
+
 
 Compression test:
 MVPS 4.4.1:

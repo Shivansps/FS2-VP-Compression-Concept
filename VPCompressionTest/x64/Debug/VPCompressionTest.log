@@ -1,4 +1,10 @@
 ﻿  VPCompressionTest.cpp
-C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(103,23): warning C4018: '<': no coinciden signed/unsigned
-C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(162,23): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(146,27): warning C4101: 'result': variable local sin referencia
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(198,23): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(258,23): warning C4018: '<': no coinciden signed/unsigned
+  vp.cpp
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\vp.cpp(49,26): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\vp.cpp(64,26): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\vp.cpp(91,22): warning C4018: '<': no coinciden signed/unsigned
+  Generando código...
   VPCompressionTest.vcxproj -> C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\x64\Debug\VPCompressionTest.exe

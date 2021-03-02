@@ -8,7 +8,7 @@
 void write_vp_header(FILE *vp,unsigned int index_offset, unsigned int num_files)
 {
     char header[5]="VPVP";
-    int version = 3; //2-Normal, 3-Compressed 
+    int version = 2;
 
     if(vp!=NULL)
     {
@@ -17,9 +17,6 @@ void write_vp_header(FILE *vp,unsigned int index_offset, unsigned int num_files)
         fwrite(&version,4,1,vp);
         fwrite(&index_offset,4,1,vp);
         fwrite(&num_files,4,1,vp);
-/*
-        printf("%d | %d \n",num_files,index_offset);
-        getch();*/
     }
 }
 
