@@ -14,7 +14,8 @@ void decompress_folder();
 void compress_single_file_lz4(char* fn_in, char* fn_out, int compression_level);
 void decompress_single_file_lz4(char* fn_in, char* fn_out);
 
-#define LZ4_DO_NOT_COMPRESS ".wav .ogg .ani .eff .mve .mp4 .msb .srt .webm"
+/*.fc2 and .fs2 files crash FSO when read from memory, audio and movies should not be used this way and the rest is not recomended*/
+#define LZ4_DO_NOT_COMPRESS ".wav .ogg .ani .eff .mve .mp4 .msb .srt .webm .fc2 .fs2"
 #define LZ4_FILE_HEADER "CLZ4"
 #define LZ4_MINIMUM_SIZE 20480
 
