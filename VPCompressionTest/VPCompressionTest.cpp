@@ -9,17 +9,16 @@ namespace fs = std::filesystem;
 
 /* ShivanSpS - I modified the LZ4 random access example with dictionary as a base for this implementation. 
 -Audio, movies and ANIs cant be used this way. DO NOT COMPRESS.
--Mission files and tbls should stay in a readeable format, you can compress then, but i think it is better this way.
+-Mission files and tables should stay in a readeable format, you can compress then, but i think it is better this way.
 -The minimum size is a optimization, there is no need to compress very small files.
 -The file header is a version, this is used to tell FSO how to decompress that file, always use 4 chars to mantain alignment, it is stored at the start of the file. "LZ41" for this implementation.
--The block size is used to tell how much information is compressed into a block, each block adds overhead, so a larger the block bytes result in smaller file size, FSO will be using 8192 LZ41.
--Original (uncompressed) file size is stored at the end of the file.
--COMPRESSED FILE DATA STUCTURE: HEADER|BLOCKS|OFFSETS|NUM_OFFSETS|ORIGINAL_FILESIZE
+-The block size is used to tell how much information is compressed into a block, each block adds overhead, so a larger the block bytes result in smaller file size.
+-COMPRESSED FILE DATA STUCTURE: HEADER|BLOCKS|OFFSETS|NUM_OFFSETS|ORIGINAL_FILESIZE|BLOCK_SIZE
 */
-#define LZ41_DO_NOT_COMPRESS ".wav .ogg .ani .mve .mp4 .msb .srt .webm .fc2 .fs2 .tbm .tbl"
+#define LZ41_DO_NOT_COMPRESS ".wav .ogg .ani .png .pcx .mve .mp4 .msb .srt .webm .fc2 .fs2 .tbm .tbl"
 #define LZ41_MINIMUM_SIZE 20480
 #define LZ41_FILE_HEADER "LZ41"
-#define LZ41_BLOCK_BYTES 8192
+#define LZ41_BLOCK_BYTES 16384
 
 /*RETURN ERROR CODES*/
 #define LZ41_DECOMPRESSION_ERROR -1
@@ -118,6 +117,12 @@ int lz41_compress_memory(char* bytes_in, char* bytes_out, int file_size)
     bytes_out += sizeof(int);
     written_bytes += sizeof(int);
 
+    /* Write Block Size */
+    int bb = LZ41_BLOCK_BYTES;
+    memcpy(bytes_out, &bb, sizeof(int));
+    bytes_out += sizeof(int);
+    written_bytes += sizeof(int);
+
     free(offsets);
     return written_bytes;
 }
@@ -194,6 +199,12 @@ int lz41_compress_memory_HC(char* bytes_in, char* bytes_out, int file_size, int 
     bytes_out += sizeof(int);
     written_bytes += sizeof(int);
 
+    /* Write Block Size */
+    int bb = LZ41_BLOCK_BYTES;
+    memcpy(bytes_out, &bb, sizeof(int));
+    bytes_out += sizeof(int);
+    written_bytes += sizeof(int);
+
     free(offsets);
     return written_bytes;
 }
@@ -205,9 +216,11 @@ int lz41_decompress_memory(char* bytes_in, char* bytes_out,int compressed_size, 
     int offset = 0;
     int length = original_size;
     int written_bytes = 0;
+    int block_size;
+    memcpy(&block_size, bytes_in + compressed_size - 4, sizeof(int));
 
-    char decBuf[LZ41_BLOCK_BYTES];
-    int max_blocks = length + 8 / LZ41_BLOCK_BYTES;
+    char *decBuf=(char*)malloc(block_size);
+    int max_blocks = length + 8 / block_size;
     int* offsets = (int*)malloc(max_blocks);
 
     /*Read Header*/
@@ -217,8 +230,8 @@ int lz41_decompress_memory(char* bytes_in, char* bytes_out,int compressed_size, 
         return LZ41_HEADER_MISMATCH;
 
     /* The blocks [currentBlock, endBlock) contain the data we want */
-    int currentBlock = offset / LZ41_BLOCK_BYTES;
-    int endBlock = ((offset + length - 1) / LZ41_BLOCK_BYTES) + 1;
+    int currentBlock = offset / block_size;
+    int endBlock = ((offset + length - 1) / block_size) + 1;
 
     /* Special cases */
     if (length == 0)
@@ -228,11 +241,11 @@ int lz41_decompress_memory(char* bytes_in, char* bytes_out,int compressed_size, 
     int numOffsets;
     int block;
     int* offsetsPtr = offsets;
-    memcpy(&numOffsets, bytes_in + compressed_size - 8, sizeof(int));
+    memcpy(&numOffsets, bytes_in + compressed_size - 12, sizeof(int));
     if (numOffsets <= endBlock)
         return LZ41_OFFSETS_MISMATCH;
     
-    char* firstOffset = bytes_in + compressed_size + (-4 * (numOffsets + 1)) - sizeof(int);
+    char* firstOffset = bytes_in + compressed_size + (-4 * (numOffsets + 1)) - (sizeof(int)*2);
     for (block = 0; block <= endBlock; ++block)
     {
         memcpy(offsetsPtr++, firstOffset, sizeof(int));
@@ -241,12 +254,12 @@ int lz41_decompress_memory(char* bytes_in, char* bytes_out,int compressed_size, 
 
     /* Seek to the first block to read */
     bytes_in +=offsets[currentBlock];
-    offset = offset % LZ41_BLOCK_BYTES;
+    offset = offset % block_size;
 
     /* Start decoding */
     for (; currentBlock < endBlock; ++currentBlock)
     {
-        char cmpBuf[LZ4_COMPRESSBOUND(LZ41_BLOCK_BYTES)];
+        char* cmpBuf = (char*)malloc(LZ4_compressBound(block_size));
         /* The difference in offsets is the size of the block */
         int  cmpBytes = offsets[currentBlock + 1] - offsets[currentBlock];
         memcpy(cmpBuf, bytes_in, cmpBytes);
@@ -262,7 +275,9 @@ int lz41_decompress_memory(char* bytes_in, char* bytes_out,int compressed_size, 
         written_bytes += (size_t)blockLength;
         offset = 0;
         length -= blockLength;
+        free(cmpBuf);
     }
+    free(decBuf);
     free(offsets);
     return written_bytes;
 }
@@ -272,20 +287,30 @@ int lz41_stream_read_random_access(FILE* file_in, char* bytes_out, int offset, i
     LZ4_streamDecode_t lz4StreamDecode_body;
     LZ4_streamDecode_t* lz4StreamDecode = &lz4StreamDecode_body;
     int written_bytes = 0;
+    int numOffsets;
+    int block_size;
+
+    /* Num Offsets */
+    fseek(file_in, sizeof(int) * -3, SEEK_END);
+    fread(&numOffsets, sizeof(int), 1, file_in);
+
+    /* Block Size */
+    fseek(file_in, sizeof(int) * -1, SEEK_END);
+    fread(&block_size, sizeof(int), 1, file_in);
 
     /* The blocks [currentBlock, endBlock) contain the data we want */
-    int currentBlock = offset / LZ41_BLOCK_BYTES;
-    int endBlock = ((offset + length - 1) / LZ41_BLOCK_BYTES) + 1;
+    int currentBlock = offset / block_size;
+    int endBlock = ((offset + length - 1) / block_size) + 1;
 
-    char decBuf[LZ41_BLOCK_BYTES];
+    char* decBuf = (char*)malloc(block_size);
     fseek(file_in, 0, SEEK_END);
-    int max_blocks = ftell(file_in) + 8 / LZ41_BLOCK_BYTES;
+    int max_blocks = ftell(file_in) + 8 / block_size;
     int* offsets = (int*)malloc(max_blocks);
     fseek(file_in, 0, SEEK_SET);
 
     /* Special cases */
-    if (length == 0) 
-        return 0; 
+    if (length == 0)
+        return 0;
 
     /*Read Header*/
     char header[sizeof(LZ41_FILE_HEADER)];
@@ -294,42 +319,41 @@ int lz41_stream_read_random_access(FILE* file_in, char* bytes_out, int offset, i
         return LZ41_HEADER_MISMATCH;
 
     /* Read the offsets tail */
-    int numOffsets;
     int block;
     int* offsetsPtr = offsets;
-    fseek(file_in, -8, SEEK_END);
-    fread(&numOffsets, sizeof(int),1, file_in);
 
     if (numOffsets <= endBlock)
         return LZ41_OFFSETS_MISMATCH;
 
-    fseek(file_in, ( -4 * (numOffsets + 1) )-sizeof(int),SEEK_END);
-    for (block = 0; block <= endBlock; ++block) 
-        fread(offsetsPtr++,sizeof(int),1,file_in);
+    fseek(file_in, (-4 * (numOffsets + 1)) - (sizeof(int) * 2), SEEK_END);
+    for (block = 0; block <= endBlock; ++block)
+        fread(offsetsPtr++, sizeof(int), 1, file_in);
 
     /* Seek to the first block to read */
     fseek(file_in, offsets[currentBlock], SEEK_SET);
-    offset = offset % LZ41_BLOCK_BYTES;
+    offset = offset % block_size;
 
     /* Start decoding */
-    for (; currentBlock < endBlock; ++currentBlock) 
+    for (; currentBlock < endBlock; ++currentBlock)
     {
-        char cmpBuf[LZ4_COMPRESSBOUND(LZ41_BLOCK_BYTES)];
+        char* cmpBuf = (char*)malloc(LZ4_compressBound(block_size));
         /* The difference in offsets is the size of the block */
         int  cmpBytes = offsets[currentBlock + 1] - offsets[currentBlock];
         fread(cmpBuf, (size_t)cmpBytes, 1, file_in);
 
-        const int decBytes = LZ4_decompress_safe_continue(lz4StreamDecode, cmpBuf, decBuf, cmpBytes, LZ41_BLOCK_BYTES);
+        const int decBytes = LZ4_decompress_safe_continue(lz4StreamDecode, cmpBuf, decBuf, cmpBytes, block_size);
         if (decBytes <= 0)
             return LZ41_DECOMPRESSION_ERROR;
 
         /* Write out the part of the data we care about */
         int blockLength = ((length) < ((decBytes - offset)) ? (length) : ((decBytes - offset)));
-        memcpy(bytes_out+written_bytes, decBuf + offset, (size_t)blockLength);
+        memcpy(bytes_out + written_bytes, decBuf + offset, (size_t)blockLength);
         written_bytes += (size_t)blockLength;
         offset = 0;
         length -= blockLength;
+        free(cmpBuf);
     }
+    free(decBuf);
     free(offsets);
     return written_bytes;
 }
@@ -397,6 +421,11 @@ int lz41_stream_compress( FILE* file_in, FILE* file_out )
 
     /* Write Filesize */
     fwrite(&file_size, 4, 1, file_out);
+    written_bytes += sizeof(int);
+
+    /* Write Block Size */
+    int bb = LZ41_BLOCK_BYTES;
+    fwrite(&bb, 4, 1, file_out);
     written_bytes += sizeof(int);
 
     free(offsets);
@@ -468,6 +497,11 @@ int lz41_stream_compress_HC(FILE* file_in, FILE* file_out,int compression_level)
     fwrite(&file_size, 4, 1, file_out);
     written_bytes += sizeof(int);
 
+    /* Write Block Size */
+    int bb = LZ41_BLOCK_BYTES;
+    fwrite(&bb, 4, 1, file_out);
+    written_bytes += sizeof(int);
+
     free(offsets);
     return written_bytes;
 }
@@ -479,10 +513,22 @@ int lz41_stream_decompress(FILE* file_in, FILE* file_out)
     int offset = 0;
     int length = 0;
     int written_bytes = 0;
+    int block_size = 0;
+    int numOffsets;
 
-    char decBuf[LZ41_BLOCK_BYTES];
+    /* Num Offsets */
+    fseek(file_in, -12, SEEK_END);
+    fread(&numOffsets, sizeof(int), 1, file_in);
+
+    /* File Size */
+    fread(&length, sizeof(int), 1, file_in);
+
+    /* Block Size */
+    fread(&block_size, sizeof(int), 1, file_in);
+
+    char* decBuf = (char*)malloc(block_size);
     fseek(file_in, 0, SEEK_END);
-    int max_blocks = ftell(file_in) + 8 / LZ41_BLOCK_BYTES;
+    int max_blocks = ftell(file_in) + 8 / block_size;
     int* offsets = (int*)malloc(max_blocks);
     fseek(file_in, 0, SEEK_SET);
 
@@ -492,43 +538,36 @@ int lz41_stream_decompress(FILE* file_in, FILE* file_out)
     if (memcmp(LZ41_FILE_HEADER, header, sizeof(LZ41_FILE_HEADER)))
         return LZ41_HEADER_MISMATCH;
 
-    /* File Size */
-    fseek(file_in, -4, SEEK_END);
-    fread(&length, 4, 1, file_in);
-
     /* The blocks [currentBlock, endBlock) contain the data we want */
-    int currentBlock = offset / LZ41_BLOCK_BYTES;
-    int endBlock = ((offset + length - 1) / LZ41_BLOCK_BYTES) + 1;
+    int currentBlock = offset / block_size;
+    int endBlock = ((offset + length - 1) / block_size) + 1;
 
     /* Special cases */
     if (length == 0)
         return 0;
 
     /* Read the offsets tail */
-    int numOffsets;
     int block;
     int* offsetsPtr = offsets;
-    fseek(file_in, -8, SEEK_END);
-    fread(&numOffsets, sizeof(int), 1, file_in);
     if (numOffsets <= endBlock)
         return LZ41_OFFSETS_MISMATCH;
-    fseek(file_in, ( -4 * (numOffsets + 1)) - sizeof(int), SEEK_END);
-    for (block = 0; block <= endBlock; ++block) 
+    fseek(file_in, (-4 * (numOffsets + 1)) - (sizeof(int) * 2), SEEK_END);
+    for (block = 0; block <= endBlock; ++block)
         fread(offsetsPtr++, sizeof(int), 1, file_in);
 
     /* Seek to the first block to read */
     fseek(file_in, offsets[currentBlock], SEEK_SET);
-    offset = offset % LZ41_BLOCK_BYTES;
+    offset = offset % block_size;
 
     /* Start decoding */
-    for (; currentBlock < endBlock; ++currentBlock) 
+    for (; currentBlock < endBlock; ++currentBlock)
     {
-        char cmpBuf[LZ4_COMPRESSBOUND(LZ41_BLOCK_BYTES)];
+        char* cmpBuf = (char*)malloc(LZ4_compressBound(block_size));
         /* The difference in offsets is the size of the block */
         int  cmpBytes = offsets[currentBlock + 1] - offsets[currentBlock];
         fread(cmpBuf, (size_t)cmpBytes, 1, file_in);
 
-        const int decBytes = LZ4_decompress_safe_continue(lz4StreamDecode, cmpBuf, decBuf, cmpBytes, LZ41_BLOCK_BYTES);
+        const int decBytes = LZ4_decompress_safe_continue(lz4StreamDecode, cmpBuf, decBuf, cmpBytes, block_size);
         if (decBytes <= 0)
             return LZ41_DECOMPRESSION_ERROR;
 
@@ -538,7 +577,9 @@ int lz41_stream_decompress(FILE* file_in, FILE* file_out)
         written_bytes += blockLength;
         offset = 0;
         length -= blockLength;
+        free(cmpBuf);
     }
+    free(decBuf);
     free(offsets);
     return written_bytes;
 }
@@ -549,6 +590,8 @@ int main()
     char fn_in[200], fn_out[200];
     FILE* vp_in;
     FILE* vp_out;
+
+    std::cout << "Block Size is: " << LZ41_BLOCK_BYTES<<"\n";
 
     printf("Enter: \n 1 - To Compress all .vps files in the folder using LZ4.");  
     printf("\n 2 - To Compress all .vps files in the folder using LZ4-HC (very, very, veeery slow).");
@@ -579,7 +622,7 @@ int main()
             scanf("%s", &fn_in);
             strcpy(fn_out, "compressed_");
             strcpy(fn_out+11, fn_in);
-            compress_single_file_lz4(fn_in, fn_out, 5);
+            compress_single_file_lz4(fn_in, fn_out, 4);
             break;
         case 5 :
             printf("\n Enter filename (with ext): \n");
@@ -818,7 +861,7 @@ void decompress_vp(FILE* vp_in, FILE* vp_out)
             file_header[4] = '\0';
 
             memcpy(file_header, file, 4);
-            memcpy(&original_size, file+(index[x].filesize-4), sizeof(int));
+            memcpy(&original_size, file+(index[x].filesize-8), sizeof(int));
             
             if (strcmp(file_header, LZ41_FILE_HEADER) == 0)
             {
