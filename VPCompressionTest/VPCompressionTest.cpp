@@ -8,14 +8,14 @@ namespace fs = std::filesystem;
 #pragma warning(disable:4996)
 
 /* ShivanSpS - I modified the LZ4 random access example with dictionary as a base for this implementation. 
--Audio, movies and .pcx images cant be used this way. DO NOT COMPRESS.
+-.pcx images cant be used this way. DO NOT COMPRESS.
 -Mission files and tables should stay in a readeable format, you can compress then, but i think it is better this way.
 -The minimum size is a optimization, there is no need to compress very small files.
 -The file header is a version, this is used to tell FSO how to decompress that file, always use 4 chars to mantain alignment, it is stored at the start of the file. "LZ41" for this implementation.
 -The block size is used to tell how much information is compressed into a block, each block adds overhead, so a larger the block bytes result in smaller file size.
 -COMPRESSED FILE DATA STUCTURE: HEADER|BLOCKS|OFFSETS|NUM_OFFSETS|ORIGINAL_FILESIZE|BLOCK_SIZE
 */
-#define LZ41_DO_NOT_COMPRESS ".wav .ogg .pcx .mve .mp4 .msb .srt .webm"
+#define LZ41_DO_NOT_COMPRESS ".pcx .PCX"
 #define LZ41_MINIMUM_SIZE 20480
 #define LZ41_FILE_HEADER "LZ41"
 #define LZ41_BLOCK_BYTES 65536
