@@ -1,0 +1,29 @@
+﻿  misc.cpp
+  vp.cpp
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\vp.cpp(49,26): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\vp.cpp(64,26): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\vp.cpp(91,22): warning C4018: '<': no coinciden signed/unsigned
+  VPCompressionTest.cpp
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(110,11): warning C4244: 'inicializando': conversión de '__int64' a 'int'; posible pérdida de datos
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(192,11): warning C4244: 'inicializando': conversión de '__int64' a 'int'; posible pérdida de datos
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(294,32): warning C4309: 'argumento': truncamiento de valor constante
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(298,32): warning C4309: 'argumento': truncamiento de valor constante
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(386,72): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(386,72): warning C4267: 'inicializando': conversión de 'size_t' a 'const int'; posible pérdida de datos
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(418,11): warning C4244: 'inicializando': conversión de '__int64' a 'int'; posible pérdida de datos
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(460,73): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(460,73): warning C4267: 'inicializando': conversión de 'size_t' a 'const int'; posible pérdida de datos
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(492,11): warning C4244: 'inicializando': conversión de '__int64' a 'int'; posible pérdida de datos
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(740,9): warning C4101: 'final_size': variable local sin referencia
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(780,23): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(804,29): warning C4018: '>=': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(852,23): warning C4018: '<': no coinciden signed/unsigned
+  lz4.c
+  lz4hc.c
+  lz4frame.c
+  xxhash.c
+  Generando código
+  Previous IPDB not found, fall back to full compilation.
+  All 564 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Generación de código finalizada
+  VPCompressionTest.vcxproj -> C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\x64\Release\VPCompressionTest.exe
