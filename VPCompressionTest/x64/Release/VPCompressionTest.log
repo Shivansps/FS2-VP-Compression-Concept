@@ -9,10 +9,10 @@ C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPC
 C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(459,73): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
 C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(459,73): warning C4267: 'inicializando': conversión de 'size_t' a 'const int'; posible pérdida de datos
 C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(491,11): warning C4244: 'inicializando': conversión de '__int64' a 'int'; posible pérdida de datos
-C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(739,9): warning C4101: 'final_size': variable local sin referencia
-C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(779,23): warning C4018: '<': no coinciden signed/unsigned
-C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(803,29): warning C4018: '>=': no coinciden signed/unsigned
-C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(851,23): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(741,9): warning C4101: 'final_size': variable local sin referencia
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(781,23): warning C4018: '<': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(805,29): warning C4018: '>=': no coinciden signed/unsigned
+C:\Users\shiva\Documents\GitHub\VPCompressionTest\FS2-VP-Compression-Concept\VPCompressionTest\VPCompressionTest.cpp(853,23): warning C4018: '<': no coinciden signed/unsigned
   Generando código
   Previous IPDB not found, fall back to full compilation.
   All 564 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.

@@ -592,8 +592,10 @@ int main()
 
     std::cout << "Block Size is: " << LZ41_BLOCK_BYTES<<"\n";
 
+    printf("\n RECOMENDED COMPRESSION: LZ4-HC Level 6\n");
+
     printf("Enter: \n 1 - To Compress all .vps files in the folder using LZ4.");  
-    printf("\n 2 - To Compress all .vps files in the folder using LZ4-HC (very, very, veeery slow).");
+    printf("\n 2 - To Compress all .vps files in the folder using LZ4-HC.");
     printf("\n 3 - To Decompress all .vps files in the folder.");
     printf("\n");
     printf("\n 4 - To Compress a single file using LZ4.");
