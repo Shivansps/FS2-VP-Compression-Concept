@@ -6,7 +6,7 @@
 typedef struct vp_index_entry {
     unsigned int offset;
     unsigned int filesize;
-    char name[36];
+    char name[32];
     unsigned int timestamp;
 }vp_index_entry;
 

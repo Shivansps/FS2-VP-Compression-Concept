@@ -13,6 +13,7 @@ namespace fs = std::filesystem;
 -The file header is a version, this is used to tell FSO how to decompress that file, always use 4 chars to mantain alignment, it is stored at the start of the file. "LZ41" for this implementation.
 -The block size is used to tell how much information is compressed into a block, each block adds overhead, so a larger the block bytes result in smaller file size.
 -COMPRESSED FILE DATA STUCTURE: HEADER|BLOCKS|OFFSETS|NUM_OFFSETS|ORIGINAL_FILESIZE|BLOCK_SIZE
+-Recomended Settings: 65536 Block Size and LZ4-HC L6
 */
 #define LZ41_DO_NOT_COMPRESS "" //".png .ogg .fs2 .fc2 .tbl .tbm"
 #define LZ41_MINIMUM_SIZE 20480
@@ -585,14 +586,14 @@ int lz41_stream_decompress(FILE* file_in, FILE* file_out)
 
 int main()
 {
-    int input;  
+    int input=3;  
     char fn_in[200], fn_out[200];
     FILE* vp_in;
     FILE* vp_out;
 
     std::cout << "Block Size is: " << LZ41_BLOCK_BYTES<<"\n";
 
-    printf("\n RECOMENDED COMPRESSION: LZ4-HC Level 6\n");
+    printf("\nRECOMENDED COMPRESSION: LZ4-HC Level 6\n\n");
 
     printf("Enter: \n 1 - To Compress all .vps files in the folder using LZ4.");  
     printf("\n 2 - To Compress all .vps files in the folder using LZ4-HC.");
@@ -704,6 +705,7 @@ int main()
             }
             break;
     }
+    printf("\n\n");
     system("pause");
 }
 
@@ -772,7 +774,6 @@ void compress_vp(FILE* vp_in, FILE* vp_out, int compression_level)
     vp_index_entry* index;
     index = (vp_index_entry*)malloc(sizeof(vp_index_entry) * numfiles);
     load_vp_index(vp_in, index, index_offset, numfiles);
-
     int count = 1;
     unsigned int wvp_num_files = 0, wvp_index_offset = 16;
     vp_index_entry* index_out;
@@ -785,13 +786,14 @@ void compress_vp(FILE* vp_in, FILE* vp_out, int compression_level)
             char* file_extension = strchr(index[x].name, '.');
             ubyte* file;
             file = load_vp_file(vp_in, index[x]);
-            if (!strstr(LZ41_DO_NOT_COMPRESS, file_extension)&&index[x].filesize>=LZ41_MINIMUM_SIZE)
+            
+            if (file_extension!=nullptr&&!strstr(LZ41_DO_NOT_COMPRESS, file_extension)&&index[x].filesize>=LZ41_MINIMUM_SIZE)
             {
                 ubyte* compressed_bytes;
                 unsigned int max_memory = LZ4_COMPRESSBOUND(index[x].filesize);
-                compressed_bytes = (ubyte*)malloc(max_memory*2); //Doubling due to extra space needed to store offsets
+                compressed_bytes = (ubyte*)malloc(max_memory*2);
 
-                int newsize;
+                int newsize=0;
 
                 if (compression_level <= 4)
                     newsize = lz41_compress_memory(file, compressed_bytes, index[x].filesize);
@@ -800,26 +802,26 @@ void compress_vp(FILE* vp_in, FILE* vp_out, int compression_level)
 
                 if (newsize <= 0)
                     std::cout << "COMPRESSION ERROR: " << newsize << " File:" << index[x].name;
-                
+
                 /*Do not write compressed files that are larger than the original, also skip errors*/
                 if (newsize >= index[x].filesize || newsize <= 0)
                 {
                     if(newsize <= 0)
-                        std::cout << "\nSkipping " << index[x].name << " compression error. Result: " << newsize;
+                       std::cout << "\nSkipping " << index[x].name << " compression error. Result: " << newsize;
                     else
-                        std::cout << "\nSkipping " << index[x].name << " compressed is larger than the original C: " << newsize << " | O: " << index[x].filesize;
-                    write_vp_file(vp_out, file, index[x].name, index[x].filesize, getUnixTime(), index_out, &wvp_num_files, &wvp_index_offset);
+                       std::cout << "\nSkipping " << index[x].name << " compressed is larger than the original C: " << newsize << " | O: " << index[x].filesize;
+                    write_vp_file(vp_out, file, index[x].name, index[x].filesize, index[x].timestamp, index_out, &wvp_num_files, &wvp_index_offset);
                 }
                 else
                 {
-                    write_vp_file(vp_out, compressed_bytes, index[x].name, newsize, getUnixTime(), index_out, &wvp_num_files, &wvp_index_offset);
+                    write_vp_file(vp_out, compressed_bytes, index[x].name, newsize, index[x].timestamp, index_out, &wvp_num_files, &wvp_index_offset);
                 }
                 free(file);
                 free(compressed_bytes);
             }
             else
             {
-                write_vp_file(vp_out, file, index[x].name, index[x].filesize, getUnixTime(), index_out, &wvp_num_files, &wvp_index_offset);
+                write_vp_file(vp_out, file, index[x].name, index[x].filesize, index[x].timestamp, index_out, &wvp_num_files, &wvp_index_offset);
                 free(file);
             }
             count++;
@@ -870,13 +872,13 @@ void decompress_vp(FILE* vp_in, FILE* vp_out)
                 int result=lz41_decompress_memory(file, uncompressed_bytes, index[x].filesize, original_size);
                 if (result <= 0)
                     std::cout << "DECOMPRESSION ERROR: " << result << " File:" << index[x].name;
-                write_vp_file(vp_out, uncompressed_bytes, index[x].name, original_size, getUnixTime(), index_out, &wvp_num_files, &wvp_index_offset);
+                write_vp_file(vp_out, uncompressed_bytes, index[x].name, original_size, index[x].timestamp, index_out, &wvp_num_files, &wvp_index_offset);
                 free(file);
                 free(uncompressed_bytes);
             }
             else
             {
-                write_vp_file(vp_out, file, index[x].name, index[x].filesize, getUnixTime(), index_out, &wvp_num_files, &wvp_index_offset);
+                write_vp_file(vp_out, file, index[x].name, index[x].filesize, index[x].timestamp, index_out, &wvp_num_files, &wvp_index_offset);
                 free(file);
             }
             count++;
